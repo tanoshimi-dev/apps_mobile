@@ -2,17 +2,21 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' as Reverpot;
 
 import 'package:gurupoint/screens/tabs.dart';
 
-class UserAuthScreen extends StatefulWidget {
+import 'package:gurupoint/providers/member_provider.dart';
+import 'package:gurupoint/models/member.dart';
+
+class UserAuthScreen extends Reverpot.ConsumerStatefulWidget {
   const UserAuthScreen({super.key});
 
   @override
-  State<UserAuthScreen> createState() => _UserAuthState();
+  Reverpot.ConsumerState<UserAuthScreen> createState() => _UserAuthState();
 }
 
-class _UserAuthState extends State<UserAuthScreen> {
+class _UserAuthState extends Reverpot.ConsumerState<UserAuthScreen> {
   final SupabaseClient supabase = Supabase.instance.client;
   bool _signInLoading = false;
   bool _signUpLoading = false;
@@ -98,6 +102,28 @@ class _UserAuthState extends State<UserAuthScreen> {
                               await supabase.auth.signInWithPassword(
                                   email: _emailController.text,
                                   password: _passwordController.text);
+
+                              final User? _user = supabase.auth.currentUser;
+                              ref.read(memberStateProvider);
+
+                              print(' ★ member id $_user');
+                              print('🏹userauth _user = $_user');
+                              final user_id = _user?.id;
+                              final email = _user?.email;
+                              print('🏹🍑 _user = $user_id');
+
+                              if (user_id != null && email != null) {
+                                ref
+                                    .watch(memberStateProvider.notifier)
+                                    .setMember(Member(
+                                        memberId: user_id, memberName: email));
+                              }
+
+                              ref.read(memberStateProvider);
+
+                              print(ref
+                                  .watch(memberStateProvider.notifier)
+                                  .getMember());
                             } catch (e) {
                               ScaffoldMessenger.of(context)
                                   .showSnackBar(const SnackBar(
@@ -134,6 +160,7 @@ class _UserAuthState extends State<UserAuthScreen> {
                                     Text("Success ! Confirmation Email Sent"),
                                 backgroundColor: Colors.green,
                               ));
+
                               setState(() {
                                 _signUpLoading = false;
                               });

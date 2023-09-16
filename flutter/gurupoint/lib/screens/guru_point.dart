@@ -73,7 +73,7 @@ class _GuruPointState extends State<GuruPointScreen> {
                     return ListTile(
                       title: Text(data['title']),
                       trailing: IconButton(
-                          onPressed: () {},
+                          onPressed: () => _dialogBuilder(context),
                           icon: const Icon(
                             Icons.edit,
                             color: Colors.red,
@@ -91,5 +91,69 @@ class _GuruPointState extends State<GuruPointScreen> {
         onPressed: () {},
       ),
     );
+  }
+
+//https://api.flutter.dev/flutter/material/showDialog.html
+
+  Future<void> _dialogBuilder(BuildContext context) {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        var memo = '';
+        return AlertDialog(
+          title: const Text('Basic dialog title'),
+          content: TextFormField(
+            autofocus: true,
+            onChanged: (value) {
+              setState(() {
+                memo = value;
+              });
+            },
+            // ダイアログが開いたときに自動でフォーカスを当てる
+          ),
+          actions: <Widget>[
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: Theme.of(context).textTheme.labelLarge,
+              ),
+              child: const Text('キャンセル'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: Theme.of(context).textTheme.labelLarge,
+              ),
+              child: const Text('登録'),
+              onPressed: () {
+                insertData(memo);
+                //Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future insertData(newText) async {
+    // setState(() {
+    //   isLoading = true;
+    // });
+    try {
+      String userId = supabase.auth.currentUser!.id;
+      await supabase
+          .from('todos')
+          .insert({'title': newText, 'user_id': userId});
+      Navigator.pop(context);
+    } catch (e) {
+      print("Error inserting data : $e");
+      // setState(() {
+      //   isLoading = false;
+      // });
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Something Went Wrong")));
+    }
   }
 }

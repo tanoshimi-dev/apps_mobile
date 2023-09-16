@@ -10,7 +10,7 @@ class Member {
     this.iconUrl,
   });
 
-  final int memberId;
+  final String memberId;
   final String memberName;
   final String? memberProfile;
   final int? defaultGuruId;

@@ -6,6 +6,8 @@ import 'package:gurupoint/widgets/main_drawer.dart';
 import 'package:gurupoint/screens/top.dart';
 import 'package:gurupoint/screens/guru_point.dart';
 
+import 'package:gurupoint/providers/member_provider.dart';
+
 class TabsScreen extends ConsumerStatefulWidget {
   const TabsScreen({super.key});
 
@@ -40,7 +42,11 @@ class _TabsScreenState extends ConsumerState<TabsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Widget activePage = TopScreen();
+    //Widget activePage = TopScreen();
+    final memberState = ref.watch(memberStateProvider);
+    // print('🙌⚡$memberState');
+    // final id = memberState.memberId;
+    // print('🙌⚡$id');
 
     var activePageTitle = 'GuruPoint 🙌';
 

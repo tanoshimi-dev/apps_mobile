@@ -7,6 +7,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:gurupoint/screens/tabs.dart';
 import 'package:gurupoint/screens/user_auth.dart';
 import 'package:gurupoint/screens/home_page.dart';
+import 'package:gurupoint/providers/member_provider.dart';
+import 'package:gurupoint/models/member.dart';
 
 final theme = ThemeData(
   useMaterial3: true,
@@ -26,7 +28,7 @@ void main() async {
   print(supabaseKey);
   await Supabase.initialize(url: supabaseUrl, anonKey: supabaseKey);
 
-  runApp(const GurupointApp());
+  runApp(const ProviderScope(child: GurupointApp()));
 }
 
 class GurupointApp extends StatelessWidget {
@@ -41,32 +43,72 @@ class GurupointApp extends StatelessWidget {
   }
 }
 
-class AppEnter extends StatefulWidget {
+class AppEnter extends ConsumerStatefulWidget {
   const AppEnter({super.key});
 
   @override
-  State<AppEnter> createState() => _AuthState();
+  ConsumerState<AppEnter> createState() => _AuthState();
 }
 
-class _AuthState extends State<AppEnter> {
+class _AuthState extends ConsumerState<AppEnter> {
   final SupabaseClient supabase = Supabase.instance.client;
   User? _user;
 
   @override
   void initState() {
     _getAuth();
+    // https://riverpod.dev/ja/docs/concepts/reading
+    ref.read(memberStateProvider);
+
+    print(' ★ member id $_user');
+    print('🏹4 _user = $_user');
+    final user_id = _user?.id;
+    final email = _user?.email;
+    print('🏹🍎4 _user = $user_id');
+
     super.initState();
+
+    // final mId = (user_id) == null ? '' : user_id;
+    // final mName = (email) == null ? '' : email;
+
+    // ref
+    //     .watch(memberStateProvider.notifier)
+    //     .setMember(Member(memberId: mId, memberName: mName));
   }
 
   // To get current user : supabase.auth.currentUser
 
   Future<void> _getAuth() async {
+    //void _getAuth() {
     setState(() {
       _user = supabase.auth.currentUser;
+
+      print(' ★ member id $_user');
+      print('💎2 _user = $_user');
+      final user_id = _user?.id;
+      final email = _user?.email;
+      print('💎2 _user = $user_id');
+
+      final mId = (user_id) == null ? '' : user_id;
+      final mName = (email) == null ? '' : email;
+
+      print('💎💎2 mId = $mId');
+      print('💎💎2 mName = $mName');
+
+      // this is error
+      // ══╡ EXCEPTION CAUGHT BY WIDGETS LIBRARY ╞═══════════════════════════════════════════════════════════
+      // The following assertion was thrown building Builder:
+      // dependOnInheritedWidgetOfExactType<UncontrolledProviderScope>() or dependOnInheritedElement() was
+      // called before _AuthState.initState() completed.
+
+      // ref
+      //     .watch(memberStateProvider.notifier)
+      //     .setMember(Member(memberId: mId, memberName: mName));
     });
     supabase.auth.onAuthStateChange.listen((event) {
       setState(() {
         _user = event.session?.user;
+        print(' ★2 member id $_user');
       });
     });
   }
@@ -74,6 +116,26 @@ class _AuthState extends State<AppEnter> {
   @override
   Widget build(BuildContext context) {
     // return _user == null ? const UserAuthScreen() : HomePage();
+    //final memberState = ref.watch(memberStateProvider);
+    // final current = ref.watch(memberStateProvider);
+    // print('⚡$current');
+    // final id = current.memberId;
+    // print('⚡$id');
+
+    print(' ★ member id $_user');
+    print('📞3 _user = $_user');
+    final user_id = _user?.id;
+    final email = _user?.email;
+    print('🌳3 _user = $user_id');
+
+    // final mId = (user_id) == null ? '' : user_id;
+    // final mName = (email) == null ? '' : email;
+
+    // this is error
+    // ref
+    //     .watch(memberStateProvider.notifier)
+    //     .setMember(Member(memberId: mId, memberName: mName));
+
     return _user == null ? const UserAuthScreen() : TabsScreen();
   }
 }
