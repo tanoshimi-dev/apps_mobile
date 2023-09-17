@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:gurupoint/widgets/main_drawer.dart';
 import 'package:gurupoint/screens/top.dart';
 import 'package:gurupoint/screens/guru_point.dart';
+import 'package:gurupoint/screens/guru_category.dart';
 
 import 'package:gurupoint/providers/member_provider.dart';
 
@@ -34,10 +35,14 @@ class _TabsScreenState extends ConsumerState<TabsScreen> {
     });
   }
 
-  Widget activePage = GuruPointScreen(
+  // Widget activePage = GuruPointScreen(
+  //   guruId: 1,
+  //   categoryId: 1,
+  //   pointId: 1,
+  // );
+
+  Widget activePage = GuruCategoryScreen(
     guruId: 1,
-    categoryId: 1,
-    pointId: 1,
   );
 
   @override
