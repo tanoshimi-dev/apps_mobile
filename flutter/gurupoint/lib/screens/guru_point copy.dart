@@ -7,106 +7,66 @@ import 'package:gurupoint/widgets/guru_grid_item.dart';
 // Dialog text input
 // https://www.youtube.com/watch?v=D6icsXS8NeA
 
-class GuruPointScreen extends StatefulWidget {
-  const GuruPointScreen({
+class GuruPointScreen_back extends StatefulWidget {
+  const GuruPointScreen_back({
     super.key,
     required this.guruId,
     required this.categoryId,
     required this.pointId,
     required this.pointName,
-    required this.point,
   });
 
   final int guruId;
   final int categoryId;
   final int pointId;
   final String pointName;
-  final int point;
 
   @override
-  State<GuruPointScreen> createState() => _GuruPointState();
+  State<GuruPointScreen_back> createState() => _GuruPointState();
 }
 
-class _GuruPointState extends State<GuruPointScreen> {
+class _GuruPointState extends State<GuruPointScreen_back> {
   final SupabaseClient supabase = Supabase.instance.client;
   late Stream<List<Map<String, dynamic>>> _readStream;
 
   @override
   void initState() {
-    // _readStream = supabase
-    //     .from('todos')
-    //     .stream(primaryKey: ['id'])
-    //     .eq('user_id', supabase.auth.currentUser!.id)
-    //     .order('id', ascending: false);
     _readStream = supabase
-        .from('member_point')
-        .stream(primaryKey: [
-          'guru_id',
-          'category_id',
-          'point_id',
-          'member_id',
-          'seq'
-        ])
-        .eq('member_id', supabase.auth.currentUser!.id)
-        .order('created_at', ascending: false);
-
-    // .listen(
-    // );
-
-    //final fsys = supabase
-    // final fsys = supabase
+        .from('todos')
+        .stream(primaryKey: ['id'])
+        .eq('user_id', supabase.auth.currentUser!.id)
+        .order('id', ascending: false);
+    // _readStream = supabase
     //     .from('member_point')
-    //     .stream(primaryKey: [
-    //       'guru_id',
-    //       'category_id',
-    //       'point_id',
-    //       'member_id',
-    //       'seq'
-    //     ])
+    //     .stream(primaryKey: ['guru_id', 'category_id', 'point_id'])
     //     .eq('member_id', supabase.auth.currentUser!.id)
-    //     .order('created_at', ascending: false)
-    //     .listen((List<Map<String, dynamic>> data) {
-    //       print("stream listen☆彡 $data");
-    //       // Do something awesome with the data
-    //     });
-
+    //     .order('created_at', ascending: false);
     super.initState();
   }
 
   // Syntax to select data
   Future<List> readData() async {
-    print('🔓 readData called');
     final result = await supabase
-        .from('member_point')
+        .from('todos')
         .select()
-        .eq('guru_id', widget.guruId)
-        .eq('category_id', widget.categoryId)
-        .eq('point_id', widget.pointId)
-        .eq('member_id', supabase.auth.currentUser!.id)
-        .order('created_at', ascending: false);
-
+        .eq('user_id', supabase.auth.currentUser!.id)
+        .order('id', ascending: false);
+    // final result = await supabase
+    //     .from('todos')
+    //     .select()
+    //     .eq('user_id', supabase.auth.currentUser!.id)
+    //     .order('id', ascending: false);
     return result;
   }
 
   @override
   Widget build(BuildContext context) {
-    var pointName = widget.pointName;
-    var point = widget.point;
-    var title = "$pointName($point)";
-
-    var pointId = widget.pointId;
-    print('readData🦖pointId　$pointId');
-    var categoryId = widget.categoryId;
-    print('readData🦖categoryId　$categoryId');
-
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.pointName),
       ),
-      //body: StreamBuilder(
-      body: FutureBuilder(
-          //stream: _readStream,
-          future: readData(),
+      body: StreamBuilder(
+          stream: _readStream,
           builder: (BuildContext context, AsyncSnapshot snapshot) {
             if (snapshot.hasError) {
               return Center(
@@ -120,40 +80,28 @@ class _GuruPointState extends State<GuruPointScreen> {
                   child: Text("No data available"),
                 );
               }
-
-              // for (final point in snapshot.data) {
-              //   print('readData🦖　$point');
-              // }
-
               return ListView.builder(
                   itemCount: snapshot.data.length,
                   itemBuilder: (context, int index) {
                     var data = snapshot.data[index]; // {} map
-                    //var title = "$data['point']ポイント";
 
                     return ListTile(
-                      title: Text(title),
+                      title: Text(data['title']),
                       trailing: Wrap(
                         spacing: 8, // アイコンの間の幅を調整
                         children: [
                           IconButton(
                               //削除
                               onPressed: () => _dialogBuilder(
-                                    context,
-                                    0,
-                                    data['seq'],
-                                    title,
-                                    data['memo'],
-                                    point,
-                                  ),
+                                  context, 0, data['id'], data['title']),
                               icon: const Icon(
                                 Icons.delete,
                                 color: Colors.grey,
                               )),
                           IconButton(
                               //編集
-                              onPressed: () => _dialogBuilder(context, 2,
-                                  data['seq'], title, data['memo'], point),
+                              onPressed: () => _dialogBuilder(
+                                  context, 2, data['id'], data['title']),
                               icon: const Icon(
                                 Icons.edit,
                                 color: Colors.red,
@@ -178,7 +126,7 @@ class _GuruPointState extends State<GuruPointScreen> {
         child: const Icon(Icons.add),
         onPressed: () {
           //追加
-          _dialogBuilder(context, 1, "", title, "", point); //
+          _dialogBuilder(context, 1, 0, ""); //
         },
       ),
     );
@@ -187,27 +135,21 @@ class _GuruPointState extends State<GuruPointScreen> {
 //https://api.flutter.dev/flutter/material/showDialog.html
 
   Future<void> _dialogBuilder(
-    BuildContext context,
-    int dialogType,
-    String seqUid,
-    String title,
-    String currentMemo,
-    int point,
-  ) {
+      BuildContext context, int dialogType, int id, String currentTitle) {
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         var memo = '';
         return AlertDialog(
           title: (dialogType == 0)
-              ? Text('削除します $title')
+              ? const Text('削除します')
               : (dialogType == 1)
-                  ? Text('登録します $title')
-                  : Text('編集します $title'),
+                  ? const Text('登録します')
+                  : const Text('編集します'),
           content: (dialogType == 0)
-              ? Text(currentMemo)
+              ? Text(currentTitle)
               : TextFormField(
-                  initialValue: currentMemo,
+                  initialValue: currentTitle,
                   autofocus: true,
                   onChanged: (value) {
                     setState(() {
@@ -235,14 +177,11 @@ class _GuruPointState extends State<GuruPointScreen> {
                   : (dialogType == 1 ? const Text("登録") : const Text("編集")),
               onPressed: () {
                 (dialogType == 0)
-                    ? deleteData(seqUid)
+                    ? deleteData(id)
                     : (dialogType == 1)
-                        ? insertData(memo, point)
-                        : updateData(seqUid, memo);
+                        ? insertData(memo)
+                        : updateData(id, memo);
                 //Navigator.of(context).pop();
-                // 再読み込み
-                //callbackFunc;
-                setState(() {});
               },
             ),
           ],
@@ -251,16 +190,13 @@ class _GuruPointState extends State<GuruPointScreen> {
     );
   }
 
-  Future deleteData(seqUid) async {
+  Future deleteData(id) async {
     try {
       String userId = supabase.auth.currentUser!.id;
-      await supabase.from('member_point').delete().match({
-        'guru_id': widget.guruId,
-        'category_id': widget.categoryId,
-        'point_id': widget.pointId,
-        'member_id': userId,
-        'seq': seqUid,
-      });
+      await supabase
+          .from('todos')
+          .delete()
+          .match({'id': id, 'user_id': userId});
 
       Navigator.pop(context);
     } catch (e) {
@@ -273,21 +209,15 @@ class _GuruPointState extends State<GuruPointScreen> {
     }
   }
 
-  Future insertData(newText, point) async {
+  Future insertData(newText) async {
     // setState(() {
     //   isLoading = true;
     // });
     try {
       String userId = supabase.auth.currentUser!.id;
-      await supabase.from('member_point').insert({
-        'guru_id': widget.guruId,
-        'category_id': widget.categoryId,
-        'point_id': widget.pointId,
-        'member_id': userId,
-        'memo': newText,
-        'point': point,
-      });
-
+      await supabase
+          .from('todos')
+          .insert({'title': newText, 'user_id': userId});
       Navigator.pop(context);
     } catch (e) {
       print("Error inserting data : $e");
@@ -299,17 +229,12 @@ class _GuruPointState extends State<GuruPointScreen> {
     }
   }
 
-  Future updateData(seqUid, newText) async {
+  Future updateData(id, newText) async {
     try {
       String userId = supabase.auth.currentUser!.id;
-      await supabase.from('member_point').update({'memo': newText}).match({
-        'guru_id': widget.guruId,
-        'category_id': widget.categoryId,
-        'point_id': widget.pointId,
-        'member_id': userId,
-        'seq': seqUid,
-      });
-
+      await supabase
+          .from('todos')
+          .update({'title': newText}).match({'id': id, 'user_id': userId});
       Navigator.pop(context);
     } catch (e) {
       print("Error inserting data : $e");
